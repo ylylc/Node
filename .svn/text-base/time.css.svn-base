@@ -1,0 +1,54 @@
+﻿@charset "utf-8";
+/********************************************************
+	filename: common.css
+	revision: 1.0
+	createdate: 2012-10-18
+	author: HeQiang
+	description: 公共样式
+********************************************************/
+
+
+
+
+.TrTitle{
+background:#D4D0C8;
+height:20;
+border-bottom:5px solid #D4D0C8;
+color:#000; cursor: hand;
+}
+.TrOver{
+background:#808080;
+height:18;
+border:0px solid #999999;
+color:#D4D0C8; cursor: hand;
+}
+.TdOver{
+background:#ffffff;
+height:18;width:22px;
+border:0px solid #cccccc;
+
+color:#000;cursor: hand;
+}
+.TdOut{
+background:#C6D3EF;
+height:16;width:20px;
+border:1px solid #3169C6;
+color:#333333; cursor: hand;
+}
+
+.TdOver2{
+background:#e6e6e6;
+height:18;
+border:1px solid #cccccc;
+border-top:1px solid #ffffff;
+border-left:1px solid #ffffff;
+color:#666666;cursor: hand;
+}
+.TdOut2{
+background:#e6e6e6;
+height:18;
+border:1px solid #ffffff;
+border-top:1px solid #cccccc;
+border-left:1px solid #cccccc;
+color:#000000; cursor: hand;
+}

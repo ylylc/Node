@@ -1,8 +1,11 @@
 var express = require('express');
 var router = express.Router();
 var crypto = require('crypto');//node.js核心模块在这里利用它生成散列值来加密密码
+var fs = require('fs');
 var User = require('../models/user.js');
 var Post = require('../models/post.js');
+var multer  = require('multer');//上传组件
+
 
 // /* GET home page. */
 // router.get('/', function(req, res, next) {
@@ -144,6 +147,54 @@ module.exports = function(app){
 		req.flash('success','退出成功');
 		res.redirect('/');
 	});
+
+	app.get('/upload',checkLogin);
+	app.get('/upload',function(req,res){
+			res.render(
+			'upload',{title:'上传',
+			user:req.session.user,
+			success:req.flash('success').toString(),
+			error:req.flash('error').toString()
+	});	
+	});
+
+	var mwMulter1 = multer({ dest: '../public/images',
+			rename: function (fieldname, filename, req, res) {
+	  		return filename
+			},
+			onFileUploadComplete: function (file, req, res) {
+ 				 console.log(file.fieldname + ' uploaded to  ' + file.path)
+			},
+			onError: function (error, next) {
+  				console.log(error)
+ 				 next(error)
+			},
+			onFileSizeLimit: function (file) {
+ 				 console.log('Failed: ', file.originalname)
+  				fs.unlink('./' + file.path) // delete the partially written file
+			}
+
+	});
+	app.post('/upload',checkLogin);
+	app.post('/upload',mwMulter1,function(req,res){
+
+		 console.log('IN POST (/files1)');
+        console.log(req.body)
+
+        var filesUploaded = 0;
+
+        if ( Object.keys(req.files).length === 0 ) {
+            console.log('no files uploaded');
+        } else {
+            console.log(req.files)
+        }
+
+		req.flash('success','上传文件成功');
+		res.redirect('/upload');
+		
+	});
+	
+
 
 
 		/*optional stuff to do after success */
