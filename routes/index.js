@@ -4,6 +4,7 @@ var crypto = require('crypto');//node.js核心模块在这里利用它生成散�
 var fs = require('fs');
 var User = require('../models/user.js');
 var Post = require('../models/post.js');
+var Comment = require('../models/comment.js');
 var multer  = require('multer');//上传组件
 
 
@@ -128,7 +129,8 @@ module.exports = function(app){
 	app.post('/post',checkLogin);
 	app.post('/post',function(req,res){
 		var currentUser = req.session.user,
-		    post = new Post(currentUser.name,req.body.title,req.body.post);
+			tags = [req.body.tag1,req.body.tag2,req.body.tag3],
+		    post = new Post(currentUser.name,req.body.title,tags,req.body.post);
 		post.save(function(err){
 			console.log(err);
 			if(err){
@@ -193,8 +195,209 @@ module.exports = function(app){
 		res.redirect('/upload');
 		
 	});
-	
 
+	app.get("/u/:name",function(req,res){
+		User.get(req.params.name,function(err,user){
+			if(!user){
+			req.flash('error','用户名不存在！');
+			return res.redirect('/');
+			}
+			Post.get(user.name,function(err,posts){
+				if(err){
+					req.flash('error',err);
+					return res.redirect('/');
+				}
+
+				res.render('user',{
+					title:user.name,
+					posts:posts,
+					user:req.session.user,
+					success:req.flash('success').toString(),
+					error:req.flash(err).toString()
+				});
+
+			});
+
+
+		});
+	});
+	app.get('/u/:name/:day/:title',checkLogin);
+	app.get('/u/:name/:day/:title',function(req,res){
+		Post.getone(req.params.name,req.params.day,req.params.title,function(err,post){
+			if(err){
+				req.flash('error',err);
+				return res.redirect('/');
+			}
+			res.render('article',{
+				title:req.params.tilte,
+				post:post,
+				user:req.session.user,
+				success:req.flash('successs').toString(),
+				error:req.flash('error').toString()
+			});
+		});
+	});
+
+	app.post('/u/:name/:day/:title',function(req,res){
+		var date = new Date();
+		var time = {
+			date:date,
+			year:date.getFullYear(),
+			month:date.getFullYear()+"-"+(date.getMonth() + 1),
+			day:date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate(),
+			minute:date.getFullYear()+"-"+(date.getMonth()+1)+"-"+date.getDate()+" " + date.getHours() + ":"+(date.getMinutes() < 10 ? '0'+date.getMinutes():date.getMinutes())
+		};
+		var comment = {
+			name:req.body.name,
+			email:req.body.email,
+			website:req.body.website,
+			time:time,
+			comtent:req.body.content
+		}
+
+		var newComment = new Comment (req.params.name,req.params.day,req.params.title,comment);
+
+		newComment.save(function(err){
+			if(err){
+				req.flash('error',err);
+				return res.redirect('back');
+			}
+			req.flash('success','留言成功');
+			res.redirect('back');
+		});
+			
+	});
+
+
+	app.get('/edit/:name/:day/:title',checkLogin);
+
+	app.get('/edit/:name/:day/:title',function(req,res){
+		var currentUser = req.session.user;
+		Post.edit(req.params.name,req.params.day,req.params.title,function(err,post){
+
+			if(err){
+				req.flash('error',err);
+				return res.redirect('/');
+			}
+
+			res.render('edit',{
+				title:'编辑',
+				post:post,
+				user:req.session.user,
+				error:req.flash('error').toString(),
+				success:req.flash('success').toString()
+			});
+
+		});
+	});
+
+	app.post('/edit/:name/:day/:title',checkLogin);
+	app.post('/edit/:name/:day/:title',function(req,res){
+		var currentUser = req.session.user;
+		Post.update(currentUser.name,req.params.day,req.params.title,req.body.post,function(err){
+			var url = '/u/'+ req.params.name+'/'+req.params.day+'/'+req.params.title;
+			console.log("==================== "+err);
+			if (err) {
+				req.flash('error',err);
+				return res.redirect(url);
+			}
+			req.flash('success','返回修改');
+			res.redirect(url);
+		});
+	});
+
+	app.get('/remove/:name/:day/:title',checkLogin);
+	app.get('/remove/:name/:day/:title',function(req,res){
+		var currentUser = req.session.user;
+		Post.remove(currentUser.name,req.params.day,req.params.title,function(err){
+			if(err){
+				req.flash("error",err);
+				return res.redirect('/');
+			}
+			req.flash('suceess','删除成功');
+			res.redirect('/');
+		});
+	});
+
+    app.get("/archive",function(req,res){
+    	Post.getArchive(function(err,posts){
+    		if(err){
+    			req.flash('error',err);
+    			return res.redirect('/');
+    		}
+
+    		res.render('archive',{
+    			title:'存档',
+    			posts:posts,
+    			user:req.session.user,
+    			success:req.flash('success').toString(),
+    			error:req.flash('error').toString()
+    		})
+    	});
+    });
+
+    app.get('/tags',function(req,res){
+    	Post.getTags(function(err,posts){
+    		if(err){
+    			req.flash('error',error);
+    			return res.redirect('/');
+    		}
+
+    		res.render('tags',{
+    			title:'标签',
+    			posts:posts,
+    			user:req.session.user,
+    			success:req.flash('success').toString(),
+    			error:req.flash('error').toString()
+    		});
+    	});
+    });
+
+ app.get('/tags/:tag',function(req,res){
+    	Post.getTag(req.params.tag,function(err,posts){
+    		if(err){
+    			req.flash('error',error);
+    			return res.redirect('/');
+    		}
+
+    		res.render('tag',{
+    			title:'TAG:' + req.params.tag,
+    			posts:posts,
+    			user:req.session.user,
+    			success:req.flash('success').toString(),
+    			error:req.flash('error').toString()
+    		});
+    	});
+    });
+
+
+app.get('/search',function(req,res){
+
+    Post.search(req.query.keyword,function(err,posts){
+    	if(err){
+    		req.flash('error',err);
+    		return res.redirect('/');
+    	}
+
+    	res.render('search',{
+    		title:"SEARCH" + req.query.keyword,
+    		post:posts,
+    		user:req.session.user,
+    		success:req.flash('success').toString(),
+    		error:req.flash('error').toString()
+    	});
+    });
+
+});
+
+app.get('/links',function(req,res){
+	res.render('links',{
+		title:"友情链接",
+		user:req.session.user,
+		success:req.flash('success').toString(),
+		error:req.flash('error').toString()
+	})
+})
 
 
 		/*optional stuff to do after success */

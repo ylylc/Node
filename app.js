@@ -5,7 +5,7 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var routes = require('./routes');
+var routes = require('./routes'); 
 var session  = require('express-session');
 var MongoStore = require('connect-mongo')(session);
 var settings = require('./setting');
@@ -37,8 +37,6 @@ app.use(session({
 }));
 app.use(flash());
 routes(app);
-
-
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
